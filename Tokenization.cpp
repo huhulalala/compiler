@@ -275,7 +275,31 @@ char* extract_substring(const char* str, int start, int end) {
     return result;
 }
 
-int main(){
+enum TokenType {
+        // 关键字
+        INT, CHAR, VOID, IF, ELSE, WHILE, RETURN,
+        // 标识符与常量
+        ID, NUM, 
+        // 运算符
+        ASSIGN, PLUS, MINUS, STAR, DIV, 
+        EQ, NE, LT, GT, AND, OR,
+        // 分隔符
+        LPAREN, RPAREN, LBRACE, RBRACE, SEMICOLON, COMMA,
+        // 特殊
+        END_OF_FILE
+}; 
+struct TokenStr
+{
+        enum TokenType type;
+        char *str;
+};
+struct result_token
+{
+        struct TokenStr * str_token;
+        int size;
+};
+
+struct result_token * Tokenization(char *sourcetext){
     printf("全局准备..（正则表达式转后缀）\n");
     char * postfix_int    = RegularToPostfix("i.n.t", 5);
     char * postfix_char   = RegularToPostfix("c.h.a.r", 7);
@@ -311,25 +335,9 @@ int main(){
 
     char * raw_id = "(a|b|c|d|e|f|g|h|i|j|k|l|m|n|o|p|q|r|s|t|u|v|w|x|y|z|_).(a|b|c|d|e|f|g|h|i|j|k|l|m|n|o|p|q|r|s|t|u|v|w|x|y|z|_|0|1|2|3|4|5|6|7|8|9)*";
     char * postfix_id = RegularToPostfix(raw_id, strlen(raw_id)+1);
-    enum TokenType {
-        // 关键字
-        INT, CHAR, VOID, IF, ELSE, WHILE, RETURN,
-        // 标识符与常量
-        ID, NUM, 
-        // 运算符
-        ASSIGN, PLUS, MINUS, STAR, DIV, 
-        EQ, NE, LT, GT, AND, OR,
-        // 分隔符
-        LPAREN, RPAREN, LBRACE, RBRACE, SEMICOLON, COMMA,
-        // 特殊
-        END_OF_FILE
-    }; 
+    
 
-    struct TokenStr
-    {
-        enum TokenType type;
-        char *str;
-    };
+    
     
     
     printf("全局准备..（构建NFA）\n");
@@ -360,7 +368,7 @@ int main(){
     struct Graph * g_num = Graph_init();   struct Item b_num = PostfixToNFA(g_num, postfix_num);
     struct Graph * g_id = Graph_init();    struct Item b_id = PostfixToNFA(g_id, postfix_id);
     
-    char *sourcetext = "int main(int x) {int a;if(x){a = 1 + 2;}}";
+    //char *sourcetext = "int main(int x) {int a;if(x){a = 1 + 2;}}";
     printf("开始转换为token流..\n");
 
     struct TokenStr * Tokenstr = (struct TokenStr *) malloc(sizeof(struct TokenStr)*1000);
@@ -439,7 +447,7 @@ int main(){
                     perior++;
                     last = perior;
                 }else{
-                    printf("%s","error");
+                    printf("%s\n","error（来自转token流）");
                     break;
                 }
             }else{
@@ -464,12 +472,11 @@ int main(){
         }
         free(sub);
     }
-    printf("token流数量：%d\n",Tokenstr_index);
-    for(int i = 0 ; i <= Tokenstr_index ; i++){        
-        printf("【%s】",Tokenstr[i].str);
-        printf("【%d】\n",Tokenstr[i].type);
-    }
+    printf("完成 token流数量：%d\n",Tokenstr_index);
     
-
-    return -1;
+    struct result_token * kk = (struct result_token *) malloc (sizeof(struct result_token)*1);
+    kk->str_token = Tokenstr;
+    kk->size = Tokenstr_index + 1;
+   
+    return kk;
 }
